@@ -7,3 +7,7 @@ lazy val root = (project in file("."))
     name := "sudokusolver",
     idePackagePrefix := Some("com.efrei.team")
   )
+
+libraryDependencies += "dev.zio" %% "zio" % "2.0.15"
+libraryDependencies += "dev.zio" %% "zio-json" % "0.6.0"
+libraryDependencies += "dev.zio" %% "zio-nio"  % "2.0.1"
