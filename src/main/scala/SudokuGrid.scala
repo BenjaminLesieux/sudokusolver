@@ -10,19 +10,22 @@ case class SudokuGrid(grid: List[List[Option[Int]]]) {
 
   override def toString: String = {
     val horizontalSeparator = "+-------+-------+-------+\n"
-    val rowSeparator = " | "
+    val rowSeparator = "|"
     val emptyCell = "x"
 
-    val formattedRows = grid.map { row =>
-      row.map {
-        case Some(value) => value.toString
-        case None => emptyCell
-      }.grouped(3).map(_.mkString("  ")).grouped(3).map(_.mkString(rowSeparator)).mkString("\n")
-    }
+    val gridString = grid.grouped(3).map { bigGroup =>
+      bigGroup.map { row =>
+        row.map {
+          case Some(value) => value.toString
+          case None => emptyCell
+        }
+        .grouped(3).map { smallGroup =>
+            smallGroup.mkString(" ", " ", " ")
+        }.mkString(rowSeparator, rowSeparator, rowSeparator)
+      }.mkString("\n")
+    }.mkString("\n" + horizontalSeparator)
 
-    val formattedGrid = formattedRows.grouped(3).map(_.mkString(s"\n$horizontalSeparator")).mkString("\n")
-
-    s"$horizontalSeparator$formattedGrid\n$horizontalSeparator"
+    f"$horizontalSeparator$gridString\n$horizontalSeparator"
   }
 }
 object SudokuGrid {
