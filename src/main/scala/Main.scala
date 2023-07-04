@@ -12,7 +12,7 @@ object Main extends ZIOAppDefault {
   def run = appLogic
 
   private val appLogic = for {
-    _ <- printLine("Welcome to sudoku solver!")
+    _ <- printLine("Welcome to sudoku solver!!")
     jsonFilePath <- readLine("Please enter the path to the JSON file: ")
     fileContent <- parseFile(jsonFilePath)
     sudokuGrid <- buildGrid(fileContent)
