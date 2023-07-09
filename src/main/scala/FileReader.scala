@@ -16,7 +16,7 @@ def parseFile(filePath: String) = {
 }
 
 def buildGrid(jsonContent: String) = {
-  val grid = Try { jsonContent.fromJson[SudokuGrid] }
+  val grid = Try { jsonContent.fromJson[UnsolvedSudokuGrid] }
   grid match {
     case Success(value) => ZIO.succeed(value)
     case Failure(exception) => ZIO.fail(exception, "Error while parsing the file")

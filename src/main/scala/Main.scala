@@ -12,12 +12,12 @@ object Main extends ZIOAppDefault {
   def run = appLogic
 
   private val appLogic = for {
-    _ <- printLine("Welcome to sudoku solver!")
+    _ <- printLine("Welcome to sudoku solver!!")
     jsonFilePath <- readLine("Please enter the path to the JSON file: ")
     fileContent <- parseFile(jsonFilePath)
     sudokuGrid <- buildGrid(fileContent)
     _ <- sudokuGrid match {
-      case Right(grid) => printLine(grid.toString)
+      case Right(grid) => printLine(grid.solve())
       case Left(error) => printLine("Invalid grid")
     }
   } yield ()
