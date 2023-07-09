@@ -17,7 +17,7 @@ object Main extends ZIOAppDefault {
     fileContent <- parseFile(jsonFilePath)
     sudokuGrid <- buildGrid(fileContent)
     _ <- sudokuGrid match {
-      case Right(grid) => printLine(grid.toString)
+      case Right(grid) => printLine(grid.solve())
       case Left(error) => printLine("Invalid grid")
     }
   } yield ()
