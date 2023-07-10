@@ -22,7 +22,7 @@ We coded together with JetBrains tools hosted by Benjamin.
 
 ### Grid 
 
-We decided to stay with the JSON format for our Grid. Moreover we thinking that the **double ARRAY** is simplier for represente the grid. 
+We decided to stay with the JSON format for our Grid. Moreover we figured that the **double ARRAY** is much more simple to represent the grid. 
 
 This is what our grid looks like :
 
@@ -44,9 +44,9 @@ This is what our grid looks like :
 ▶️ We'll use Nil to find out when our cell will be empty.    
 
 Now let's explain how our code works. 
-We will explain first the file `SudukoGrid.scala`
+We will first explicit `SudukoGrid.scala`
 
-## How we are displaying our grid ?
+## How are we displaying our grid ?
 
 This is our version of a `prettyPrint`  
 
@@ -60,7 +60,7 @@ sealed trait SudokuGrid[A <: Cell | SolvedCell] {// A list of cell. The type hav
 
 ```
 
-**That how we retrieve the information of our grid.**
+**That is how we retrieve the information from our grid.**
 
 ```Scala
 /** 
@@ -91,7 +91,7 @@ case class UnsolvedSudokuGrid(grid: List[List[Cell]]) extends SudokuGrid[Cell] {
       }.mkString("\n")
     }.mkString("\n" + horizontalSeparator)
 
-    // Thanks that we can display clearly our grid on the console.
+    // Thanks to that we can clearly display the grid on the console.
 
     f"$horizontalSeparator$gridString\n$horizontalSeparator"
   }
@@ -128,9 +128,9 @@ case class UnsolvedSudokuGrid(grid: List[List[Cell]]) extends SudokuGrid[Cell] {
   }
 ```
 
-### And how we solve a grid ? 
+### And how are we solving a grid ? 
 
-For that we are using a back Tracking algorithms 
+For that we are using a Backtracking algorithm.
 
 ```Scala
 def solve(): SolvedSudokuGrid = {
@@ -159,12 +159,12 @@ def solve(): SolvedSudokuGrid = {
 }
 ```
 
-## AND the we check if the solving is correct.
+## AND then, we check if the solving is correct.
 
 ```Scala
 case class SolvedSudokuGrid(grid: List[List[SolvedCell]]) extends SudokuGrid[SolvedCell] {
   require(grid.length == 9 && grid.forall(e => e.length == 9 && e.forall(i => i >= 1 && i <= 9)) && isSolved, "Invalid grid (is not solved, check for duplicates)") 
-// => Throw error in case we put a wrong grid ou a invalid grid.
+// => Throws error in the case we put a wrong grid or a invalid grid. We are using a [require].
 
  // We check if the grid is correctly solved.
   private def isSolved: Boolean = {
@@ -201,7 +201,7 @@ case class SolvedSudokuGrid(grid: List[List[SolvedCell]]) extends SudokuGrid[Sol
     checkRows(grid) && checkColumns(grid) && checkBlocks(grid)
   }
 ```
-### With the example of our previous grid, there is the final result :
+### With the example of our previous grid, here is the final result :
 
 ![image](https://github.com/BenjaminLesieux/sudokusolver/assets/73226823/49c39c2b-12de-4282-b3aa-054381609d64)
 
