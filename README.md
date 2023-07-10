@@ -231,7 +231,7 @@ The grid is correctly solved.
 # Main.Scala
 The Main file is an extension of ZIOAppDefault. It is a trait that is provided by the ZIO Library which simplifies the writing of ZIO Applications.
 
-```
+```Scala
 object Main extends ZIOAppDefault {
   def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] = appLogic
 
