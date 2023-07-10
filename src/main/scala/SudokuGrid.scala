@@ -63,7 +63,7 @@ case class UnsolvedSudokuGrid(grid: List[List[Cell]]) extends SudokuGrid[Cell] {
     rowValid && colValid && boxValid
   }
 
-  def solve(): SolvedSudokuGrid = {
+  def solve(): Option[SolvedSudokuGrid] = {
     val arrayGrid = grid.map(_.toArray).toArray
     var solvedGrid: Option[SolvedSudokuGrid] = None
 
@@ -86,9 +86,7 @@ case class UnsolvedSudokuGrid(grid: List[List[Cell]]) extends SudokuGrid[Cell] {
     }
 
     solveHelper(arrayGrid)
-    solvedGrid match
-      case Some(grid) => grid
-      case None => throw new Exception("No solution found")
+    solvedGrid
   }
 }
 

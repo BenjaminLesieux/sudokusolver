@@ -33,7 +33,9 @@ class SudokuGridTest extends AnyFlatSpec {
       )
     )
 
-    assert(grid.solve() == solution)
+    grid.solve() match
+      case Some(solvedGrid) => assert(solvedGrid == solution)
+      case None => fail()
   }
 
   "An incorrect grid" should "not have a solution" in {
@@ -66,6 +68,6 @@ class SudokuGridTest extends AnyFlatSpec {
       )
     )
 
-    assertThrows[Exception](unsolvableSudokuGrid.solve())
+    assert(unsolvableSudokuGrid.solve().isEmpty)
   }
 }
