@@ -1,0 +1,13 @@
+{
+  "grid": [
+    [null, null, null, null, null, null, null, null, null],
+    [null, null, null, null, null, null, null, null, null],
+    [null, null, null, null, null, null, null, null, null],
+    [null, null, null, 1, 2, 3, null, null, null],
+    [null, null, null, 4, 5, 6, null, null, null],
+    [null, null, null, 7, 8, 9, null, null, null],
+    [null, null, null, null, null, null, null, null, null],
+    [null, null, null, null, null, null, null, null, null],
+    [null, null, null, null, null, null, null, null, null]
+  ]
+}
