@@ -1,9 +1,9 @@
 package com.efrei.team
 
 import zio.ZIO
-import zio.json._
+import zio.json.*
 
-import java.io.FileNotFoundException
+import java.io.{BufferedWriter, File, FileNotFoundException, FileWriter, PrintWriter}
 import scala.io.Source
 import scala.util.{Failure, Success, Try}
 
@@ -13,6 +13,14 @@ def parseFile(filePath: String) = {
     case Success(value) => ZIO.succeed(value.mkString)
     case Failure(exception) => ZIO.fail(exception, "File not found")
   }
+}
+
+def writeFile(solvedGrid: SolvedSudokuGrid, gridName: String): Unit = {
+  val pw = new PrintWriter(new File("src/main/files/solutions/" + gridName + ".json"))
+  println(solvedGrid)
+  println("Your solution has been saved in src/main/files/solutions/" + gridName + ".json")
+  pw.write(solvedGrid.toJson)
+  pw.close()
 }
 
 def buildGrid(jsonContent: String) = {
