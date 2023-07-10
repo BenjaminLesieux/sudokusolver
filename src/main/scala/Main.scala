@@ -9,7 +9,7 @@ import zio.{Scope, ZIO, ZIOAppArgs, ZIOAppDefault}
 import scala.io.Source
 
 object Main extends ZIOAppDefault {
-  def run = appLogic
+  def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] = appLogic
 
   private val appLogic = for {
     _ <- printLine("Welcome to sudoku solver!!")
@@ -17,7 +17,7 @@ object Main extends ZIOAppDefault {
     fileContent <- parseFile(jsonFilePath)
     sudokuGrid <- buildGrid(fileContent)
     _ <- sudokuGrid match {
-      case Right(grid) => printLine(grid.solve())
+      case Right(grid) => ZIO.succeed(writeFile(grid.solve(), jsonFilePath))
       case Left(error) => printLine("Invalid grid")
     }
   } yield ()

@@ -1,7 +1,9 @@
 package com.efrei.team
 
-import zio.json.{DeriveJsonDecoder, JsonDecoder}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
+import scala.annotation.tailrec
+import scala.util.boundary
 import scala.util.boundary.break
 
 type Cell = Option[Int]
@@ -9,16 +11,6 @@ type SolvedCell = Int
 
 sealed trait SudokuGrid[A] {
   def grid: List[List[A]]
-
-  def validate(x: Int, y: Int, value: Int): Boolean = {
-    val row = grid(y)
-    val column = grid.map(row => row(x))
-    val bigGroupX = x / 3
-    val bigGroupY = y / 3
-    val bigGroup = grid.slice(bigGroupY * 3, bigGroupY * 3 + 3).map(row => row.slice(bigGroupX * 3, bigGroupX * 3 + 3))
-
-    !row.contains(Some(value)) && !column.contains(Some(value)) && !bigGroup.flatten.contains(Some(value))
-  }
 }
 
 case class UnsolvedSudokuGrid(grid: List[List[Cell]]) extends SudokuGrid[Cell] {
@@ -47,62 +39,92 @@ case class UnsolvedSudokuGrid(grid: List[List[Cell]]) extends SudokuGrid[Cell] {
     f"$horizontalSeparator$gridString\n$horizontalSeparator"
   }
 
-  private def findUnassignedLocation(): Option[(Int, Int)] = {
-    grid.zipWithIndex.find { case (row, rowIndex) =>
-      row.zipWithIndex.exists { case (cell, columnIndex) =>
-        cell.isEmpty
-      }
-    }.map { case (row, rowIndex) =>
-      (rowIndex, row.zipWithIndex.find { case (cell, columnIndex) =>
-        cell.isEmpty
-      }.get._2)
+  private def validate(grid: Array[Array[Cell]], x: Int, y: Int, value: Int): Boolean = {
+    val rowValid = grid(y).forall {
+      case Some(cellValue) => cellValue != value
+      case None => true
     }
+
+    val colValid = grid.map(_(x)).forall {
+      case Some(cellValue) => cellValue != value
+      case None => true
+    }
+
+    val boxRow = y / 3
+    val boxCol = x / 3
+
+    val boxValid = grid.slice(boxRow * 3, boxRow * 3 + 3).forall { row =>
+      row.slice(boxCol * 3, boxCol * 3 + 3).forall {
+        case Some(cellValue) => cellValue != value
+        case None => true
+      }
+    }
+
+    rowValid && colValid && boxValid
   }
+
   def solve(): SolvedSudokuGrid = {
     val arrayGrid = grid.map(_.toArray).toArray
+    var solvedGrid: Option[SolvedSudokuGrid] = None
 
-    println(arrayGrid.mkString("Array(", ", ", ")"))
-
-    def solveHelper(currentGrid: Array[Array[Cell]]): Boolean = {
-      val location: Option[(Int, Int)] = findUnassignedLocation()
-
-      println(location)
-
-      if (location.isEmpty) return true
-
-      val (x, y) = location.get
-
-      val possibleValues = (1 to 9).filter(validate(x, y, _))
-
-      possibleValues.foreach { value =>
-        currentGrid(y)(x) = Some(value)
-
-        if (!solveHelper(currentGrid)) {
-          currentGrid(y)(x) = None
-        }
+    def solveHelper(sudoku: Array[Array[Cell]], x: Int = 0, y: Int = 0): Unit = {
+      if (y >= 9) {
+        solvedGrid = Some(SolvedSudokuGrid(arrayGrid.map(_.map(_.getOrElse(0)).toList).toList))
+      } else if (x >= 9) {
+        solveHelper(sudoku, 0, y + 1)
+      } else if (sudoku(y)(x).isDefined) {
+        solveHelper(sudoku, x + 1, y)
+      } else (1 to 9).filter(value => validate(sudoku, x, y, value)).foreach { value =>
+        sudoku(y)(x) = Some(value)
+        solveHelper(sudoku, x + 1, y)
+        sudoku(y)(x) = None
       }
-
-      false
     }
 
-    if (solveHelper(arrayGrid))
-      SolvedSudokuGrid(arrayGrid.map(_.map(_.get).toList).toList)
-    else
-      throw new Exception("No solution found")
+    solveHelper(arrayGrid)
+    solvedGrid match
+      case Some(grid) => grid
+      case None => throw new Exception("No solution found")
   }
 }
 
 case class SolvedSudokuGrid(grid: List[List[SolvedCell]]) extends SudokuGrid[SolvedCell] {
-  require(
-    grid.length == 9 &&
-      grid.forall((e => e.length == 9 &&
-        e.forall(i => i >= 1 && i <= 9))) &&
-        grid.zipWithIndex.forall((row, rowIndex) =>
-          row.zipWithIndex.forall((cell, columnIndex) =>
-            validate(rowIndex, columnIndex, cell)
-          )
-        ),
-        "Invalid grid")
+  require(grid.length == 9 && grid.forall(e => e.length == 9 && e.forall(i => i >= 1 && i <= 9)) && isSolved, "Invalid grid (is not solved, check for duplicates)")
+
+  private def isSolved: Boolean = {
+    def hasDuplicates(values: List[Int]): Boolean = {
+      values.distinct.length != values.length
+    }
+
+    def checkRows(grid: List[List[Int]]): Boolean = {
+      grid.forall(row => !row.contains(0) && !hasDuplicates(row))
+    }
+
+    def checkColumns(grid: List[List[Int]]): Boolean = {
+      val transposedGrid = grid.transpose
+      transposedGrid.forall(col => !col.contains(0) && !hasDuplicates(col))
+    }
+
+    def checkBlocks(grid: List[List[Int]]): Boolean = {
+      def extractBlock(startRow: Int, startCol: Int): List[Int] = {
+        val block = for {
+          i <- startRow until startRow + 3
+          j <- startCol until startCol + 3
+        } yield grid(i)(j)
+        block.toList
+      }
+
+      val blocks = for {
+        i <- 0 until 9 by 3
+        j <- 0 until 9 by 3
+      } yield extractBlock(i, j)
+
+      blocks.forall(block => !block.contains(0) && !hasDuplicates(block))
+    }
+
+    checkRows(grid) && checkColumns(grid) && checkBlocks(grid)
+  }
+
 
   override def toString: String = {
     val horizontalSeparator = "+-------+-------+-------+\n"
@@ -126,4 +148,5 @@ object UnsolvedSudokuGrid {
 
 object SolvedSudokuGrid {
   implicit val decoder: JsonDecoder[SolvedSudokuGrid] = DeriveJsonDecoder.gen[SolvedSudokuGrid]
+  implicit val encoder: JsonEncoder[SolvedSudokuGrid] = DeriveJsonEncoder.gen[SolvedSudokuGrid]
 }
