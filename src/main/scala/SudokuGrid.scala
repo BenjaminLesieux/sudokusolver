@@ -9,7 +9,7 @@ import scala.util.boundary.break
 type Cell = Option[Int]
 type SolvedCell = Int
 
-sealed trait SudokuGrid[A] {
+sealed trait SudokuGrid[A <: Cell | SolvedCell] {
   def grid: List[List[A]]
 }
 
@@ -67,18 +67,22 @@ case class UnsolvedSudokuGrid(grid: List[List[Cell]]) extends SudokuGrid[Cell] {
     val arrayGrid = grid.map(_.toArray).toArray
     var solvedGrid: Option[SolvedSudokuGrid] = None
 
-    def solveHelper(sudoku: Array[Array[Cell]], x: Int = 0, y: Int = 0): Unit = {
+    def solveHelper(sudoku: Array[Array[Cell]], x: Int = 0, y: Int = 0): Boolean = {
       if (y >= 9) {
         solvedGrid = Some(SolvedSudokuGrid(arrayGrid.map(_.map(_.getOrElse(0)).toList).toList))
+        return true
       } else if (x >= 9) {
-        solveHelper(sudoku, 0, y + 1)
+        return solveHelper(sudoku, 0, y + 1)
       } else if (sudoku(y)(x).isDefined) {
-        solveHelper(sudoku, x + 1, y)
+        return solveHelper(sudoku, x + 1, y)
       } else (1 to 9).filter(value => validate(sudoku, x, y, value)).foreach { value =>
         sudoku(y)(x) = Some(value)
-        solveHelper(sudoku, x + 1, y)
-        sudoku(y)(x) = None
+        if (!solveHelper(sudoku, x + 1, y)) {
+          sudoku(y)(x) = None
+        }
       }
+
+      false
     }
 
     solveHelper(arrayGrid)
