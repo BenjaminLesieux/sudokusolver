@@ -223,6 +223,8 @@ case class SolvedSudokuGrid(grid: List[List[SolvedCell]]) extends SudokuGrid[Sol
 ```
 ### With the example of our previous grid, here is the final result :
 
+After launching the code we have to write to name of the grid we need to solve, for exemple here : **grid1**.
+
 ![image](https://github.com/BenjaminLesieux/sudokusolver/assets/73226823/49c39c2b-12de-4282-b3aa-054381609d64)
 
 
