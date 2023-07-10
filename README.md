@@ -1,4 +1,7 @@
-## sudokusolver LIU Senhua - LESIEUX Benjamin -  MARIOTTE Thomas - PHAM Van Alenn
+## sudokusolver 
+### by LESIEUX Benjamin - LIU Senhua -  MARIOTTE Thomas - PHAM Van Alenn
+
+We are coding together with IntelliJ.
 
 # ZIO 
 
@@ -26,17 +29,48 @@ This is what our grid looks like :
 ```JSON
 {
   "grid": [
-    [5, 3, 0, 0, 7, 0, 0, 0, 0],
-    [6, 0, 0, 1, 9, 5, 0, 0, 0],
-    [0, 9, 8, 0, 0, 0, 0, 6, 0],
-    [8, 0, 0, 0, 6, 0, 0, 0, 3],
-    [4, 0, 0, 8, 0, 3, 0, 0, 1],
-    [7, 0, 0, 0, 2, 0, 0, 0, 6],
-    [0, 6, 0, 0, 0, 0, 2, 8, 0],
-    [0, 0, 0, 4, 1, 9, 0, 0, 5],
-    [0, 0, 0, 0, 8, 0, 0, 7, 9]
-  ]
-}
+[5, 3, null, null, 7, null, null, null, null],
+   [6, null, null, 1, 9, 5, null, null, null],
+[null, 9, 8, null, null, null, null, 6, null],
+[8, null, null, null, 6, null, null, null, 3],
+   [4, null, null, 8, null, 3, null, null, 1],
+[7, null, null, null, 2, null, null, null, 6],
+[null, 6, null, null, null, null, 2, 8, null],
+   [null, null, null, 4, 1, 9, null, null, 5],
+ [null, null, null, null, 8, null, null, 7, 9]
+]
 
 ```
-We'll use Nil to find out when our cell will be empty
+▶️ We'll use Nil to find out when our cell will be empty.
+
+## How we are displaying our grid 
+```Scala
+case class UnsolvedSudokuGrid(grid: List[List[Cell]]) extends SudokuGrid[Cell] {
+  require(grid.length == 9 && grid.forall(e => e.length == 9 && e.forall(i => i match {
+    case Some(value) => value >= 1 && value <= 9
+    case None => true
+  })), "Invalid grid")
+
+  override def toString: String = {
+    val horizontalSeparator = "+-------+-------+-------+\n"
+    val rowSeparator = "|"
+    val emptyCell = "x"
+
+    val gridString = grid.grouped(3).map { bigGroup =>
+      bigGroup.map { row =>
+        row.map {
+          case Some(value) => value.toString
+          case None => emptyCell
+        }
+          .grouped(3).map { smallGroup =>
+          smallGroup.mkString(" ", " ", " ")
+        }.mkString(rowSeparator, rowSeparator, rowSeparator)
+      }.mkString("\n")
+    }.mkString("\n" + horizontalSeparator)
+
+    f"$horizontalSeparator$gridString\n$horizontalSeparator"
+  }
+```
+
+
+
