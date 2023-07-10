@@ -16,8 +16,13 @@ object Main extends ZIOAppDefault {
     jsonFilePath <- readLine("Please enter the path to the JSON file: ")
     fileContent <- parseFile(jsonFilePath)
     sudokuGrid <- buildGrid(fileContent)
+    _ <- printLine(sudokuGrid.toString)
     _ <- sudokuGrid match {
-      case Right(grid) => ZIO.succeed(writeFile(grid.solve(), jsonFilePath))
+      case Right(grid) =>
+        val result = grid.solve()
+        result match
+          case Some(solvedGrid) => ZIO.succeed(writeFile(solvedGrid, jsonFilePath))
+          case None => ZIO.fail("No solution found")
       case Left(error) => printLine("Invalid grid")
     }
   } yield ()
