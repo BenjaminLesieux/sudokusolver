@@ -41,20 +41,24 @@ This is what our grid looks like :
 ]
 
 ```
-▶️ We'll use Nil to find out when our cell will be empty.    
+▶️ We'll use the optional type to find out when our cell will be empty. The **null** cells will become None and the others **Some(value)**. 
 
 Now let's explain how our code works. 
 We will first explicit `SudukoGrid.scala`
 
+# SudokuGrid.scala 
+
 ## How are we displaying our grid ?
 
-This is our version of a `prettyPrint`  
+We define a few datatypes to help us in our algorithm. We define a cell a something that can or can not contain an integer in it.
+We then define a SolvedCell as something that **must** be an int. 
+We define a trait **SudokuGrid** that defines the basic interface of a grid. It only provides a grid object, which is a list of list of either a Cell or a SolvedCell. 
 
 ```Scala
 type Cell = Option[Int] // We must a value
 type SolvedCell = Int
 
-sealed trait SudokuGrid[A <: Cell | SolvedCell] {// A list of cell. The type have to be a unsolve cell or a solve cell.
+sealed trait SudokuGrid[A <: Cell | SolvedCell] { 
   def grid: List[List[A]] A list of a list of something
 }
 
@@ -62,18 +66,34 @@ sealed trait SudokuGrid[A <: Cell | SolvedCell] {// A list of cell. The type hav
 
 **That is how we retrieve the information from our grid.**
 
-```Scala
-/** 
-* We always have a sudoku grid 
-* In this grid we have require OR a solved grid
-**/
+We created a case class **UnsolvedSudokuGrid** that takes into parameters a **List[List[Cell]]** and extends the trait **SudokuGrid[Cell]**. The instance of this class is only created if the grid is of 9x9 format and if the Cell either contains no values or only values between 1 and 9.  
 
-case class UnsolvedSudokuGrid(grid: List[List[Cell]]) extends SudokuGrid[Cell] { 
+```Scala
   require(grid.length == 9 && grid.forall(e => e.length == 9 && e.forall(i => i match {
     case Some(value) => value >= 1 && value <= 9
     case None => true
   })), "Invalid grid")
+```
 
+We override the **toString** method only to show the grid in a prettier format like this : 
+
+```text 
++-------+-------+-------+
+| x x 3 | x 2 x | 6 x x |
+| 9 x x | 3 x 5 | x x 1 |
+| x x 1 | 8 x 6 | 4 x x |
++-------+-------+-------+
+| x x 8 | 1 x 2 | 9 x x |
+| 7 x x | x x x | x x 8 |
+| x x 6 | 7 x 8 | 2 x x |
++-------+-------+-------+
+| x x 2 | 6 x 9 | 5 x x |
+| 8 x x | 2 x 3 | x x 9 |
+| x x 5 | x 1 x | 3 x x |
++-------+-------+-------+ 
+```
+
+```Scala
   override def toString: String = { // Creating separator for build our grid
     val horizontalSeparator = "+-------+-------+-------+\n" 
     val rowSeparator = "|"
@@ -97,7 +117,7 @@ case class UnsolvedSudokuGrid(grid: List[List[Cell]]) extends SudokuGrid[Cell] {
   }
 ```
 
-## How to validate a cell ? 
+## How to validate a cell? 
 
 ```Scala
     
@@ -208,4 +228,79 @@ case class SolvedSudokuGrid(grid: List[List[SolvedCell]]) extends SudokuGrid[Sol
 
 The grid is correctly solved.
 
+# Main.Scala
+The Main file is an extension of ZIOAppDefault. It is a trait that is provided by the ZIO Library which simplifies the writing of ZIO Applications.
+
+```
+object Main extends ZIOAppDefault {
+  def run: ZIO[Any with ZIOAppArgs with Scope, Any, Any] = appLogic
+
+  private val appLogic = for {
+    _ <- printLine("Welcome to sudoku solver!!")
+    jsonFilePath <- readLine("Please enter the path to the JSON file: ")
+    fileContent <- parseFile(jsonFilePath)
+    sudokuGrid <- buildGrid(fileContent)
+    _ <- sudokuGrid match {
+      case Right(grid) => ZIO.succeed(writeFile(grid.solve(), jsonFilePath))
+      case Left(error) => printLine("Invalid grid")
+    }
+  } yield ()
+}
+```  
+The Main file is going to :
+- Print a welcoming message using "printLine".
+- It's going to prompt the user to enter the path of a JSON file using "readLine".
+- It calls the "parseFile" function using "jsonFilePath" and it is going to be interpreted as a "fileContent".
+- It will also call "buildGrid" function, and pass over the "fileContent", hence it is going to be interpreted as "sudokuGrid".
+- As a final step, we will check the value of "sudokuGrid" using a pattern match, if it's Right(grid), it means he grid was successfully built and it will then proceed to allow the solver to solve it using "grid.solve()". The result is then written to a file specified by "jsonFilePath" using the "writeFile" function. If sudokuGrid is "Left(Error)", that means that there was an error while building the grid and in this case "printLine" will display an appropriate error message.
+
+# FileReader.Scala
+
+This function allows us to read our grid from a file.
+
+
+### Parse 
+
+```Scala
+def parseFile(filePath: String) = {
+  val source = Try { Source.fromFile("src/main/files/" + filePath + ".json") }
+  source match {
+    case Success(value) => ZIO.succeed(value.mkString)
+    case Failure(exception) => ZIO.fail(exception, "File not found")
+  }
+}
+```
+
+▶️ The `parseFile` function searches for a file whose name matches the filename we provide as input.
+
+
+
+### Write 
+
+```Scala 
+def writeFile(solvedGrid: SolvedSudokuGrid, gridName: String): Unit = {
+  val pw = new PrintWriter(new File("src/main/files/solutions/" + gridName + ".json"))
+  println(solvedGrid)
+  println("Your solution has been saved in src/main/files/solutions/" + gridName + ".json")
+  pw.write(solvedGrid.toJson)
+  pw.close()
+}
+```
+
+▶️ This function allows us to easily write to a file.   
+
+
+### Build 
+
+```Scala
+def buildGrid(jsonContent: String) = {
+  val grid = Try { jsonContent.fromJson[UnsolvedSudokuGrid] }
+  grid match {
+    case Success(value) => ZIO.succeed(value)
+    case Failure(exception) => ZIO.fail(exception, "Error while parsing the file")
+  }
+}
+```
+
+▶️ Finally, this function checks if the grid is valid for construction.
 
